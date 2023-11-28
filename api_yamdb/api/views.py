@@ -11,6 +11,8 @@ class GenreViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name', )
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
