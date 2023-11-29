@@ -30,6 +30,8 @@ class Title(models.Model):
     description = models.TextField(blank=True, null=True)
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name='titles')
+    genre = models.ManyToManyField(
+        Genre, through='GenreTitle', related_name='titles')
 
     class Meta:
         ordering = ('id',)
@@ -42,9 +44,9 @@ class Title(models.Model):
 
 class GenreTitle(models.Model):
     title = models.ForeignKey(
-        Title, on_delete=models.CASCADE, related_name='genres')
+        Title, on_delete=models.CASCADE)
     genre = models.ForeignKey(
-        Genre, on_delete=models.CASCADE, related_name='titles')
+        Genre, on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('title', 'genre')
