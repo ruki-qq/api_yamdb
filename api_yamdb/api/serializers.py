@@ -13,6 +13,7 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Category
+        lookup_field = 'slug'
 
 class TitleSerializer(serializers.ModelSerializer):
     class Meta:
