@@ -4,7 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend, FilterSet
 from rest_framework import viewsets, permissions, filters, mixins
 
 from reviews.models import (Genre, Category, Title, Review, Comment)
-from .serializers import (GenreSerializer, CategorySerializer, TitleSerializer, ReviewSerializer, CommentSerializer)
+from api.serializers import (GenreSerializer, CategorySerializer, TitleSerializerGET, TitleSerializerPOST, ReviewSerializer, CommentSerializer)
 
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
@@ -32,9 +32,14 @@ class TitleFilter(FilterSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     ordering = ['id']
-    serializer_class = TitleSerializer
+    serializer_class = TitleSerializerGET
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TitleSerializerGET
+        return TitleSerializerPOST
 
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
