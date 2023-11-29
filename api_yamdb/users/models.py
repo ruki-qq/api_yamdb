@@ -7,7 +7,15 @@ from django.utils.crypto import get_random_string
 class UserManager(BaseUserManager):
     """Custom user manager."""
 
-    def create_user(self, email, username, bio=None, role=None, password=None):
+    def create_user(
+        self,
+        email,
+        username,
+        bio=None,
+        role='user',
+        password=None,
+        **extra_fields,
+    ):
         """Creates and saves a User.
         --------
         Fields: email, username, password, role.
@@ -28,6 +36,7 @@ class UserManager(BaseUserManager):
             confirmation_code=conf_code,
             bio=bio,
             role=role,
+            **extra_fields,
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -39,6 +48,22 @@ class UserManager(BaseUserManager):
             [email],
         )
         return user
+
+    def create_superuser(
+        self,
+        email,
+        username,
+        bio=None,
+        role='admin',
+        password=None,
+        **extra_fields,
+    ):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        return self.create_user(
+            email, username, bio, role, password, **extra_fields
+        )
 
 
 class User(AbstractUser):

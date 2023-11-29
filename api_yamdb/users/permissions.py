@@ -22,6 +22,9 @@ class IsModerator(permissions.IsAuthenticatedOrReadOnly):
         )
 
 
-class IsAdmin(permissions.AllowAny):
-    # 99% useless perm, might delete in future
-    pass
+class IsAdmin(permissions.IsAuthenticatedOrReadOnly):
+    def has_object_permission(self, request, view):
+        return (
+            request.method in permissions.SAFE_METHODS
+            or request.user.role == 'admin'
+        )
