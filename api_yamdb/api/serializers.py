@@ -8,6 +8,7 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Genre
+        lookup_field = 'slug'
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
