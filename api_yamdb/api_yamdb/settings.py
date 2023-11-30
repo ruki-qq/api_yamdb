@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 
 
@@ -24,7 +25,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'api',
-    'reviews'
+    'reviews',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -95,9 +97,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-RU'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
@@ -112,7 +114,22 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
+AUTH_USER_MODEL = 'users.User'
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+
+EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
+
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 2
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PAGINATION_CLASS': (
+        'rest_framework.pagination.PageNumberPagination'
+    ),
+    'PAGE_SIZE': 2,
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
 }
