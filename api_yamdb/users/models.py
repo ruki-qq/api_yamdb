@@ -53,8 +53,8 @@ class UserManager(BaseUserManager):
         self,
         email,
         username,
+        role,
         bio=None,
-        role='admin',
         password=None,
         **extra_fields,
     ):
@@ -62,7 +62,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
 
         return self.create_user(
-            email, username, bio, role, password, **extra_fields
+            email, username, bio, 'admin', password, **extra_fields
         )
 
 
