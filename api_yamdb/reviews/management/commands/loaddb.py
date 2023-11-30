@@ -3,6 +3,7 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 
 from reviews.models import Category, Genre, Title, GenreTitle, Review, Comment 
+from users.models import User
 
 class Command(BaseCommand):
     help = 'Load data from .csv to DB'
@@ -10,7 +11,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         print(f'Use path: {options["path"]}')
 
-        for cl in (Category, Genre, Title, GenreTitle, Review, Comment):
+        for cl in (Category, Genre, Title, GenreTitle, Review, Comment, User):
             file = cl.__name__.lower()
             if file in ('title', 'comment', 'user'):
                 file += 's'
@@ -29,9 +30,9 @@ class Command(BaseCommand):
 
                     a = dict()
                     for i, attr in enumerate(attrs):
-                        if attr == 'author':
-                            continue;
-                        if attr in ('category',):
+#                        if attr == 'author':
+#                            continue;
+                        if attr in ('category', 'author'):
                             attr += '_id'
                         a[attr] = row[i]
 
