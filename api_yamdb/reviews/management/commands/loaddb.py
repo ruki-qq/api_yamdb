@@ -8,17 +8,16 @@ class Command(BaseCommand):
     help = 'Load data from .csv to DB'
 
     def handle(self, *args, **options):
-        print(options['path'])
-        print(Category.__name__)
+        print(f'Use path: {options["path"]}')
 
-        for cl in (Category, Genre, Title, Review, Comment):
+        for cl in (Category, Genre, Title, GenreTitle, Review, Comment):
             file = cl.__name__.lower()
             if file in ('title', 'comment'):
                 file += 's'
             if file == 'genretitle':
                 file = 'genre_title'
 
-            print(file)
+            print(f'Load file {file}.csv')
             with open(f'{options["path"]}/{file}.csv') as f:
                 reader = csv.reader(f)
                 attrs = None
@@ -43,12 +42,12 @@ class Command(BaseCommand):
                             a[attr.lower()] = c.objects.get(pk=row[i])
 
 
-                    print(a)
+                    #print(a)
                     t=cl(**a)
                     t.save()
 
 
-        return "String"
+        return "OK"
 
 
     def add_arguments(self, parser):
