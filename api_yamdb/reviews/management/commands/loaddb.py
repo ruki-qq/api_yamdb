@@ -12,7 +12,7 @@ class Command(BaseCommand):
 
         for cl in (Category, Genre, Title, GenreTitle, Review, Comment):
             file = cl.__name__.lower()
-            if file in ('title', 'comment'):
+            if file in ('title', 'comment', 'user'):
                 file += 's'
             if file == 'genretitle':
                 file = 'genre_title'
@@ -31,21 +31,11 @@ class Command(BaseCommand):
                     for i, attr in enumerate(attrs):
                         if attr == 'author':
                             continue;
+                        if attr in ('category',):
+                            attr += '_id'
                         a[attr] = row[i]
-                        attr_bak = attr
-                        if attr in ('title_id', 'genre_id', 'review_id'):
-                            attr = attr[:-3]
-                        if attr in ('title', 'genre', 'review', 'category'):
-                            attr = attr.capitalize()
-                            #print(attr)
-                            c = globals()[attr];
-                            a[attr.lower()] = c.objects.get(pk=row[i])
 
-
-                    #print(a)
-                    t=cl(**a)
-                    t.save()
-
+                    (cl(**a)).save()
 
         return "OK"
 
