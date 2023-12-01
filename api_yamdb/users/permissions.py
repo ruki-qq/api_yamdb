@@ -12,9 +12,3 @@ class IsAdmin(permissions.BasePermission):
             and request.user.is_authenticated
             and (request.user.is_superuser or request.user.role == self.ROLE)
         )
-
-
-class IsModerator(IsAdmin):
-    """Permission to give access to users with admin role."""
-
-    ROLE = 'moderator'

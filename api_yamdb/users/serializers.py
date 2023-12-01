@@ -47,6 +47,6 @@ class MyTokenObtainSerializer(serializers.Serializer):
             if not existing_user.confirmation_code or not check_password(
                 conf_code, existing_user.confirmation_code
             ):
-                raise serializers.ValidationError("Wrong confirmation code.")
+                raise serializers.ValidationError('Wrong confirmation code.')
 
         return super(MyTokenObtainSerializer, self).validate(attrs)

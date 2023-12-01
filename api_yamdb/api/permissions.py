@@ -2,14 +2,17 @@ from rest_framework import permissions
 
 
 def is_admin(user):
-    return user.is_authenticated and (user.is_superuser or user.role == 'admin')
+    return user.is_authenticated and (
+        user.is_superuser or user.role == 'admin'
+    )
 
 
-class OwnerOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
-    """Anonymous user can read,
-    Authenticated user can create,
-    Owner or Moderator can change.
+class IsOwnerOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
+    """Anonymous user can read.
+    Authenticated user can create.
+    Owner or Moderator and above can change.
     """
+
     def has_object_permission(self, request, view, obj):
         return (
             request.method in permissions.SAFE_METHODS
@@ -19,17 +22,15 @@ class OwnerOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
         )
 
 
-class AdminOrReadOnly(permissions.BasePermission):
-    """Only Admin can create or change
-    """
+class IsAdminOrReadOnly(permissions.BasePermission):
+    """Only Admin can create or change."""
+
     def has_permission(self, request, view):
-        return (
-            request.method in permissions.SAFE_METHODS 
-            or is_admin(request.user)
+        return request.method in permissions.SAFE_METHODS or is_admin(
+            request.user
         )
 
     def has_object_permission(self, request, view, obj):
-        return (
-            request.method in permissions.SAFE_METHODS 
-            or is_admin(request.user)
+        return request.method in permissions.SAFE_METHODS or is_admin(
+            request.user
         )
