@@ -1,3 +1,4 @@
+from pprint import pprint
 from django.shortcuts import get_object_or_404
 from django_filters import CharFilter, NumberFilter
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet
@@ -59,8 +60,16 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return self.get_title().reviews.all()
 
+#    def create(self, request, *args, **kwargs):
+#        request.data['title'] = self.get_title()
+#        request.data['author'] = self.request.user
+#        serializer = self.get_serializer(data=request.data)
+#        serializer.is_valid(raise_exception=True)
+#        self.perform_create(serializer)
+
     def perform_create(self, serializer):
         serializer.save(title=self.get_title(), author=self.request.user)
+
 
 
 class CommentViewSet(viewsets.ModelViewSet):

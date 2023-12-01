@@ -67,7 +67,7 @@ class Review(models.Model):
 
     class Meta:
         ordering = ('pub_date',)
-#        unique_together = ('title', 'author')
+        unique_together = ('title', 'author')
 
 
 class Comment(models.Model):
