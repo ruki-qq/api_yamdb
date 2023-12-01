@@ -1,11 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import (
+    filters,
     generics,
     permissions,
     status,
     viewsets,
-    filters,
 )
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -13,9 +13,9 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from users.permissions import IsAdmin
 from users.serializers import (
+    MyTokenObtainSerializer,
     RegistrationSerializer,
     UserSerializer,
-    MyTokenObtainSerializer,
 )
 
 User = get_user_model()
@@ -80,12 +80,16 @@ class RegistrationViewSet(viewsets.GenericViewSet):
         if existing_user:
             if existing_user.email == self.request.data.get('email'):
                 existing_user.set_confirmation_code()
-                return Response(status=status.HTTP_200_OK)
+                return Response(
+                    'User exists, sending email with confirmation code.',
+                    status=status.HTTP_200_OK,
+                )
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         user.set_confirmation_code()
+        user.save()
         return Response(serializer.data)
 
 

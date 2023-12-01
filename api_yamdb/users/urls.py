@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 
 from users.views import (
     RegistrationViewSet,
-    UserModelViewSet,
     TokenObtainView,
+    UserModelViewSet,
 )
 
 v1_router = DefaultRouter()

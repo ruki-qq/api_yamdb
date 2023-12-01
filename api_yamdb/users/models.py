@@ -1,10 +1,8 @@
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser
 from django.core.mail import send_mail
 from django.db import models
 from django.utils.crypto import get_random_string
-
-from users.utils import send_conf_code_mail
 
 
 class User(AbstractUser):
@@ -17,9 +15,9 @@ class User(AbstractUser):
 
     email = models.EmailField('Email адрес', max_length=254, unique=True)
     confirmation_code = models.CharField(
-        'Код подтверждения', max_length=16, blank=True, null=True
+        'Код подтверждения', max_length=255, blank=True
     )
-    bio = models.TextField('Биография', blank=True, null=True)
+    bio = models.TextField('Биография', blank=True)
     role = models.CharField(
         'Роль',
         max_length=50,
