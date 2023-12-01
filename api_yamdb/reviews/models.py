@@ -31,7 +31,7 @@ class Title(models.Model):
     year = models.PositiveIntegerField(validators=[MinValueValidator(1500)])
     description = models.TextField(blank=True, null=True)
     category = models.ForeignKey(
-        Category, on_delete=models.CASCADE, related_name='titles')
+        Category, on_delete=models.SET_NULL, related_name='titles', null=True)
     genre = models.ManyToManyField(
         Genre, through='GenreTitle', related_name='titles')
 
@@ -67,6 +67,7 @@ class Review(models.Model):
 
     class Meta:
         ordering = ('pub_date',)
+#        unique_together = ('title', 'author')
 
 
 class Comment(models.Model):

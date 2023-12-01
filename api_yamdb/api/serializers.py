@@ -1,6 +1,7 @@
 from django.db.models import Avg
 from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
+from rest_framework.relations import SlugRelatedField, StringRelatedField
+from rest_framework.validators import UniqueTogetherValidator
 
 from reviews.models import Genre, Category, Title, Review, Comment
 
@@ -33,7 +34,7 @@ class TitleSerializerGET(serializers.ModelSerializer):
         if rating:
             return int(rating)
         else:
-            return 0
+            return None
 
 class TitleSerializerPOST(serializers.ModelSerializer):
     category = SlugRelatedField(slug_field='slug', queryset=Category.objects.all())
@@ -46,13 +47,18 @@ class TitleSerializerPOST(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    author = StringRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+#    title = StringRelatedField(read_only=True, default=serializers.CurrentUserDefault())
     class Meta:
         fields = '__all__'
         model = Review
-        read_only_fields = ('title',)
+        read_only_fields = ('title', 'author',)
+#        validators = (UniqueTogetherValidator(
+#                      queryset=Review.objects.all(), fields=('title', 'author')),)
 
 class CommentSerializer(serializers.ModelSerializer):
+    author = StringRelatedField(read_only=True)
     class Meta:
         fields = '__all__'
         model = Comment
-        read_only_fields = ('review',)
+        read_only_fields = ('review', 'author',)
