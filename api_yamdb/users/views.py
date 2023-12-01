@@ -1,9 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from rest_framework import (
     generics,
-    mixins,
     permissions,
     status,
     viewsets,
@@ -13,7 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-from users.permissions import IsAdmin, IsUser
+from users.permissions import IsAdmin
 from users.serializers import (
     RegistrationSerializer,
     UserSerializer,
@@ -34,11 +32,10 @@ class UserModelViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        user.save()
+        self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, pk=None, *args, **kwargs):
         user = get_object_or_404(User, username=pk)
         serializer = self.get_serializer(user)
         return Response(serializer.data)
@@ -56,12 +53,13 @@ class UserModelViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated],
     )
     def get_myself_user(self, request):
+        data = request.data.copy()
+        if 'role' in data.keys():
+            data.pop('role')
         if request.method == 'PATCH':
-            if request.data.get('role'):
-                return Response(status=status.HTTP_400_BAD_REQUEST)
             serializer = self.get_serializer(
                 request.user,
-                data={**request.data},
+                data=data,
                 partial=True,
             )
             serializer.is_valid(raise_exception=True)
@@ -71,10 +69,9 @@ class UserModelViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class RegistrationViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+class RegistrationViewSet(viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = RegistrationSerializer
-    permission_classes = [permissions.AllowAny]
 
     def create(self, request, *args, **kwargs):
         existing_user = User.objects.filter(
@@ -82,21 +79,13 @@ class RegistrationViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         ).first()
         if existing_user:
             if existing_user.email == self.request.data.get('email'):
-                send_mail(
-                    'Your confirmation code.',
-                    'Your code to get JWT token is'
-                    f' {existing_user.confirmation_code}',
-                    'admin@yamdb.ru',
-                    [existing_user.email],
-                )
+                existing_user.set_confirmation_code()
                 return Response(status=status.HTTP_200_OK)
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        if user.username == 'me':
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        user.save()
+        user.set_confirmation_code()
         return Response(serializer.data)
 
 
@@ -110,4 +99,4 @@ class TokenObtainView(generics.GenericAPIView):
             User, username=self.request.data.get('username')
         )
         token = str(AccessToken.for_user(user))
-        return Response({'token': token}, status=status.HTTP_200_OK)
+        return Response({'token': token})

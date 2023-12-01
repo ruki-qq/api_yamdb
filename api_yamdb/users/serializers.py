@@ -1,13 +1,27 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
 from rest_framework import serializers
 
 User = get_user_model()
 
 
-class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(required=False, write_only=True)
-    confirmation_code = serializers.CharField(required=False, write_only=True)
+class RegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'username']
 
+    @staticmethod
+    def validate_username(value):
+        """Checks that username is not in forbidden values."""
+
+        forbidden = ['me']
+
+        if value in forbidden:
+            raise serializers.ValidationError(f'Username cannot be "{value}"')
+        return value
+
+
+class UserSerializer(RegistrationSerializer):
     class Meta:
         model = User
         fields = [
@@ -17,18 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name',
             'bio',
             'role',
-            'password',
-            'confirmation_code',
         ]
-
-
-class RegistrationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['email', 'username']
-
-    def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
 
 
 class MyTokenObtainSerializer(serializers.Serializer):
@@ -40,9 +43,9 @@ class MyTokenObtainSerializer(serializers.Serializer):
             username=attrs.get('username')
         ).first()
         if existing_user:
-            if (
-                attrs.get('confirmation_code')
-                != existing_user.confirmation_code
+            conf_code = attrs.get('confirmation_code')
+            if not existing_user.confirmation_code or not check_password(
+                conf_code, existing_user.confirmation_code
             ):
                 raise serializers.ValidationError("Wrong confirmation code.")
 
