@@ -1,9 +1,10 @@
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, viewsets
+from rest_framework import viewsets
 
 from api.v1.filters import TitleFilter
+from api.v1.mixins import BaseCatGenrViewSet
 from api.v1.permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
 from api.v1.serializers import (
     CategorySerializer,
@@ -14,18 +15,6 @@ from api.v1.serializers import (
     TitleSerializerPOST,
 )
 from reviews.models import Category, Genre, Review, Title
-
-
-class BaseCatGenrViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['name']
-    lookup_field = 'slug'
-    permission_classes = [IsAdminOrReadOnly]
 
 
 class GenreViewSet(BaseCatGenrViewSet):
@@ -39,8 +28,9 @@ class CategoryViewSet(BaseCatGenrViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.annotate(
-        rating=Avg('reviews__score')).order_by('name')
+    queryset = Title.objects.annotate(rating=Avg('reviews__score')).order_by(
+        'name'
+    )
     serializer_class = TitleSerializerGET
     filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilter
@@ -74,9 +64,11 @@ class CommentViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_review(self):
-        return get_object_or_404(Review,
-                                 pk=self.kwargs.get('review_id'),
-                                 title_id=self.kwargs.get('title_id'))
+        return get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id'),
+            title_id=self.kwargs.get('title_id'),
+        )
 
     def get_queryset(self):
         return self.get_review().comments.all()

@@ -1,8 +1,8 @@
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser
-from django.core.mail import send_mail
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
-from django.utils.crypto import get_random_string
+
+from users.validators import validate_forbidden_usernames
 
 
 class User(AbstractUser):
@@ -13,10 +13,13 @@ class User(AbstractUser):
         MODERATOR = 'moderator', 'Модератор'
         ADMIN = 'admin', 'Администратор'
 
-    email = models.EmailField('Email адрес', max_length=254, unique=True)
-    confirmation_code = models.CharField(
-        'Код подтверждения', max_length=255, blank=True
+    username = models.CharField(
+        'Имя пользователя',
+        max_length=150,
+        unique=True,
+        validators=[UnicodeUsernameValidator(), validate_forbidden_usernames],
     )
+    email = models.EmailField('Email адрес', unique=True)
     bio = models.TextField('Биография', blank=True)
     role = models.CharField(
         'Роль',
@@ -30,19 +33,9 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
-    def set_confirmation_code(self):
-        conf_code = get_random_string(16)
-        self.confirmation_code = make_password(conf_code)
-        send_mail(
-            'Your confirmation code.',
-            f'Your code to get JWT token is {conf_code}',
-            'admin@yamdb.ru',
-            [self.email],
-        )
-
     @property
     def is_admin(self):
-        return self.is_superuser or self.role == 'admin'
+        return self.role == 'admin' or self.is_superuser
 
     @property
     def is_moderator(self):
