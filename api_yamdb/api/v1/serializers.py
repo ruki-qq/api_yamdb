@@ -17,13 +17,19 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class TitleSerializerGET(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
+    category = CategorySerializer(read_only=True, allow_null=False)
     genre = GenreSerializer(read_only=True, many=True)
     rating = serializers.IntegerField(default=0)
 
     class Meta:
         model = Title
         fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data['category']:
+            data['category'] = {'name': '', 'slug': ''}
+        return data
 
 
 class TitleSerializerPOST(serializers.ModelSerializer):
@@ -44,9 +50,7 @@ class TitleSerializerPOST(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
+    author = SlugRelatedField(read_only=True, slug_field='username')
 
     class Meta:
         model = Review
@@ -70,9 +74,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
+    author = SlugRelatedField(read_only=True, slug_field='username')
 
     class Meta:
         model = Comment

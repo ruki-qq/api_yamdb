@@ -38,16 +38,12 @@ class Category(models.Model):
 
 def validate_year(value):
     if value > int(datetime.now().year):
-        raise ValidationError(
-            'Год не может быть в будущем'
-        )
+        raise ValidationError('Год не может быть в будущем')
 
 
 class Title(models.Model):
     name = models.CharField('Название', max_length=settings.CHAR_FIELD_MAX_LEN)
-    year = models.SmallIntegerField(
-        'Год выпуска', validators=[validate_year]
-    )
+    year = models.SmallIntegerField('Год выпуска', validators=[validate_year])
     description = models.TextField('Описание', blank=True)
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL, related_name='titles', null=True
@@ -57,7 +53,10 @@ class Title(models.Model):
     )
 
     class Meta:
-        ordering = ['year', 'name',]
+        ordering = [
+            'year',
+            'name',
+        ]
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
@@ -74,22 +73,25 @@ class Review(models.Model):
         User, on_delete=models.CASCADE, related_name='reviews'
     )
     score = models.PositiveIntegerField(
-        validators=[MinValueValidator(settings.RATING_MIN,
-                                      message='Ниже допустимого'),
-                    MaxValueValidator(settings.RATING_MAX,
-                    message='Выше допустимого')]
+        validators=[
+            MinValueValidator(settings.RATING_MIN, message='Ниже допустимого'),
+            MaxValueValidator(settings.RATING_MAX, message='Выше допустимого'),
+        ]
     )
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
     class Meta:
         ordering = ('pub_date',)
-        constraints = (models.UniqueConstraint(fields=('title', 'author'),
-                                               name='author_title_uniq'),)
+        constraints = (
+            models.UniqueConstraint(
+                fields=('title', 'author'), name='author_title_uniq'
+            ),
+        )
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
 
     def __str__(self):
-        return self.text[:settings.TEXT_PREVIEW_LEN]
+        return self.text[: settings.TEXT_PREVIEW_LEN]
 
 
 class Comment(models.Model):
@@ -108,4 +110,4 @@ class Comment(models.Model):
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        return self.text[:settings.TEXT_PREVIEW_LEN]
+        return self.text[: settings.TEXT_PREVIEW_LEN]

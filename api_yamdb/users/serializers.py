@@ -1,27 +1,30 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import check_password
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
+
+from users.validators import validate_forbidden_usernames
 
 User = get_user_model()
 
 
-class RegistrationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['email', 'username']
+class RegistrationSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=settings.USERNAME_MAX_LEN,
+        validators=[
+            UnicodeUsernameValidator(),
+            validate_forbidden_usernames,
+            UniqueValidator(queryset=User.objects.all()),
+        ],
+    )
+    email = serializers.EmailField(
+        max_length=settings.EMAIL_MAX_LEN,
+        validators=[UniqueValidator(queryset=User.objects.all())],
+    )
 
-    @staticmethod
-    def validate_username(value):
-        """Checks that username is not in forbidden values."""
 
-        forbidden = ['me']
-
-        if value in forbidden:
-            raise serializers.ValidationError(f'Username cannot be "{value}"')
-        return value
-
-
-class UserSerializer(RegistrationSerializer):
+class UserSerializer(serializers.ModelSerializer, RegistrationSerializer):
     class Meta:
         model = User
         fields = [
@@ -35,18 +38,8 @@ class UserSerializer(RegistrationSerializer):
 
 
 class MyTokenObtainSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    username = serializers.CharField(
+        max_length=settings.USERNAME_MAX_LEN,
+        validators=[UnicodeUsernameValidator(), validate_forbidden_usernames],
+    )
     confirmation_code = serializers.CharField()
-
-    def validate(self, attrs):
-        existing_user = User.objects.filter(
-            username=attrs.get('username')
-        ).first()
-        if existing_user:
-            conf_code = attrs.get('confirmation_code')
-            if not existing_user.confirmation_code or not check_password(
-                conf_code, existing_user.confirmation_code
-            ):
-                raise serializers.ValidationError('Wrong confirmation code.')
-
-        return super(MyTokenObtainSerializer, self).validate(attrs)
