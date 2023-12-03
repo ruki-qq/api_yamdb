@@ -1,6 +1,5 @@
-from django.db.models import Avg
 from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField, StringRelatedField
+from rest_framework.relations import SlugRelatedField
 
 from reviews.models import Category, Comment, Genre, Review, Title
 
@@ -9,31 +8,22 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
         exclude = ['id']
-        lookup_field = 'slug'
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         exclude = ['id']
-        lookup_field = 'slug'
 
 
 class TitleSerializerGET(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(default=0)
 
     class Meta:
         model = Title
         fields = '__all__'
-
-    @staticmethod
-    def get_rating(obj):
-        rating = obj.reviews.all().aggregate(Avg('score'))['score__avg']
-        if rating:
-            return int(rating)
-        return None
 
 
 class TitleSerializerPOST(serializers.ModelSerializer):
@@ -54,14 +44,13 @@ class TitleSerializerPOST(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    author = StringRelatedField(
-        read_only=True, default=serializers.CurrentUserDefault()
+    author = SlugRelatedField(
+        read_only=True, slug_field='username'
     )
 
     class Meta:
         model = Review
-        fields = '__all__'
-        read_only_fields = ['author', 'title']
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
 
     def validate(self, data):
         request = self.context.get('request')
@@ -81,9 +70,10 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = StringRelatedField(read_only=True)
+    author = SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
 
     class Meta:
         model = Comment
-        fields = '__all__'
-        read_only_fields = ['author', 'review']
+        fields = ('id', 'text', 'author', 'pub_date')
