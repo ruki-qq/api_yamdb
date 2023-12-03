@@ -9,6 +9,7 @@ from api.views import (
     TitleViewSet,
 )
 
+
 v1_router = DefaultRouter()
 
 v1_router.register(
