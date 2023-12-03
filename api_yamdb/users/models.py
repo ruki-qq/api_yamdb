@@ -27,6 +27,8 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ['username']
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
     def set_confirmation_code(self):
         conf_code = get_random_string(16)
@@ -37,3 +39,11 @@ class User(AbstractUser):
             'admin@yamdb.ru',
             [self.email],
         )
+
+    @property
+    def is_admin(self):
+        return self.is_superuser or self.role == 'admin'
+
+    @property
+    def is_moderator(self):
+        return self.role == 'moderator'

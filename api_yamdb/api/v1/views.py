@@ -1,10 +1,11 @@
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from django_filters import CharFilter, NumberFilter
-from django_filters.rest_framework import DjangoFilterBackend, FilterSet
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
 
-from api.permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
-from api.serializers import (
+from api.v1.filters import TitleFilter
+from api.v1.permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
+from api.v1.serializers import (
     CategorySerializer,
     CommentSerializer,
     GenreSerializer,
@@ -15,47 +16,31 @@ from api.serializers import (
 from reviews.models import Category, Genre, Review, Title
 
 
-class GenreViewSet(
+class BaseCatGenrViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
+    viewsets.GenericViewSet
 ):
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+    lookup_field = 'slug'
+    permission_classes = [IsAdminOrReadOnly]
+
+
+class GenreViewSet(BaseCatGenrViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['name']
-    lookup_field = 'slug'
-    permission_classes = [IsAdminOrReadOnly]
 
 
-class CategoryViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
-):
+class CategoryViewSet(BaseCatGenrViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['name']
-    lookup_field = 'slug'
-    permission_classes = [IsAdminOrReadOnly]
-
-
-class TitleFilter(FilterSet):
-    category = CharFilter(field_name='category__slug')
-    genre = CharFilter(field_name='genre__slug')
-    year = NumberFilter(field_name='year')
-
-    class Meta:
-        model = Title
-        fields = ['name', 'category', 'genre', 'year']
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
-    ordering = ['id']
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')).order_by('name')
     serializer_class = TitleSerializerGET
     filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilter
@@ -89,7 +74,9 @@ class CommentViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_review(self):
-        return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        return get_object_or_404(Review,
+                                 pk=self.kwargs.get('review_id'),
+                                 title_id=self.kwargs.get('title_id'))
 
     def get_queryset(self):
         return self.get_review().comments.all()
