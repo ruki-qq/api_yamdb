@@ -9,7 +9,6 @@ from rest_framework import (
     viewsets,
 )
 from rest_framework.decorators import action, api_view
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 

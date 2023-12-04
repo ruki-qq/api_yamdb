@@ -2,9 +2,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 
-from users.validators import validate_forbidden_usernames, ValidateUniqueFields
+from users.validators import validate_forbidden_usernames
 
 
 User = get_user_model()
