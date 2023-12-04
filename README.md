@@ -32,7 +32,7 @@ Use csv files and command ```python manage.py loaddb``` to fill database.
 Go to http://localhost:8000/redoc/ endpoint to see API docs.
 
 ## Authors
-- [Soslan Khutinaev](https://github.com/ruki-qq/api_yamdb)
+- [Soslan Khutinaev](https://github.com/ruki-qq)
 - [Andrey Korolev](https://github.com/ankor2023)
 
 ## Tech Stack
