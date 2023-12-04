@@ -1,10 +1,9 @@
-from datetime import datetime
-
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.conf import settings
 from django.db import models
+
+from reviews.validators import validate_year
 
 
 User = get_user_model()
@@ -34,11 +33,6 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
-
-
-def validate_year(value):
-    if value > int(datetime.now().year):
-        raise ValidationError('Год не может быть в будущем')
 
 
 class Title(models.Model):
@@ -74,8 +68,18 @@ class Review(models.Model):
     )
     score = models.PositiveIntegerField(
         validators=[
-            MinValueValidator(settings.RATING_MIN, message='Ниже допустимого'),
-            MaxValueValidator(settings.RATING_MAX, message='Выше допустимого'),
+            MinValueValidator(
+                settings.RATING_MIN,
+                message=(
+                    f'Минимально допустимое значение: {settings.RATING_MIN}'
+                ),
+            ),
+            MaxValueValidator(
+                settings.RATING_MAX,
+                message=(
+                    f'Максимально допустимое значение: {settings.RATING_MAX}'
+                ),
+            ),
         ]
     )
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
@@ -91,7 +95,7 @@ class Review(models.Model):
         verbose_name_plural = 'Отзывы'
 
     def __str__(self):
-        return self.text[: settings.TEXT_PREVIEW_LEN]
+        return self.text[:settings.TEXT_PREVIEW_LEN]
 
 
 class Comment(models.Model):
@@ -110,4 +114,4 @@ class Comment(models.Model):
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        return self.text[: settings.TEXT_PREVIEW_LEN]
+        return self.text[:settings.TEXT_PREVIEW_LEN]

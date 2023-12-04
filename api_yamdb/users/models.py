@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
@@ -15,7 +16,7 @@ class User(AbstractUser):
 
     username = models.CharField(
         'Имя пользователя',
-        max_length=150,
+        max_length=settings.USERNAME_MAX_LEN,
         unique=True,
         validators=[UnicodeUsernameValidator(), validate_forbidden_usernames],
     )
@@ -23,7 +24,7 @@ class User(AbstractUser):
     bio = models.TextField('Биография', blank=True)
     role = models.CharField(
         'Роль',
-        max_length=50,
+        max_length=settings.ROLE_MAX_LEN,
         choices=UserRoles.choices,
         default=UserRoles.USER,
     )

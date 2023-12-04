@@ -25,12 +25,6 @@ class TitleSerializerGET(serializers.ModelSerializer):
         model = Title
         fields = '__all__'
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        if not data['category']:
-            data['category'] = {'name': '', 'slug': ''}
-        return data
-
 
 class TitleSerializerPOST(serializers.ModelSerializer):
     category = SlugRelatedField(

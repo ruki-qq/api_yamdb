@@ -9,6 +9,7 @@ from rest_framework import (
     viewsets,
 )
 from rest_framework.decorators import action, api_view
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -18,6 +19,7 @@ from users.serializers import (
     RegistrationSerializer,
     UserSerializer,
 )
+
 
 User = get_user_model()
 
@@ -54,31 +56,29 @@ class UserModelViewSet(viewsets.ModelViewSet):
 
 @api_view(['POST'])
 def user_registration(request):
-    def set_confirmation_code_and(user):
-        conf_code = default_token_generator.make_token(user)
-        send_mail(
-            'Your confirmation code.',
-            f'Your code to get JWT token is {conf_code}',
-            'admin@yamdb.ru',
-            [user.email],
-        )
-
-    existing_user = User.objects.filter(
-        username=request.data.get('username')
-    ).first()
-    if existing_user:
-        if existing_user.email == request.data.get('email'):
-            set_confirmation_code_and(existing_user)
-            return Response(
-                'User exists, sending email with confirmation code.',
-                status=status.HTTP_200_OK,
-            )
-
     serializer = RegistrationSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    user = User.objects.create(**serializer.data)
-    set_confirmation_code_and(user)
-    return Response(serializer.data)
+    for field, value in serializer.data.items():
+        existing_user = User.objects.filter(**{field: value}).first()
+        if existing_user:
+            remaining_data = serializer.data.copy()
+            remaining_data.pop(field)
+            for name in remaining_data:
+                if getattr(existing_user, name) != remaining_data[name]:
+                    return Response(
+                        f'"field_name": [{field}]',
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            break
+    user, created = User.objects.get_or_create(**serializer.data)
+    conf_code = default_token_generator.make_token(user)
+    send_mail(
+        'Your confirmation code.',
+        f'Your code to get JWT token is {conf_code}',
+        'admin@yamdb.ru',
+        [user.email],
+    )
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -86,11 +86,11 @@ def token_obtain(request):
     serializer = MyTokenObtainSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     user = get_object_or_404(User, username=serializer.data.get('username'))
-    if default_token_generator.check_token(
+    if not default_token_generator.check_token(
         user, serializer.data.get('confirmation_code')
     ):
-        token = str(AccessToken.for_user(user))
-        return Response({'token': token})
-    return Response(
-        'Wrong confirmation code.', status=status.HTTP_400_BAD_REQUEST
-    )
+        return Response(
+            'Wrong confirmation code.', status=status.HTTP_400_BAD_REQUEST
+        )
+    token = str(AccessToken.for_user(user))
+    return Response({'token': token})

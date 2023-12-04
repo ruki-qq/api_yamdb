@@ -4,7 +4,8 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from users.validators import validate_forbidden_usernames
+from users.validators import validate_forbidden_usernames, ValidateUniqueFields
+
 
 User = get_user_model()
 
@@ -15,16 +16,14 @@ class RegistrationSerializer(serializers.Serializer):
         validators=[
             UnicodeUsernameValidator(),
             validate_forbidden_usernames,
-            UniqueValidator(queryset=User.objects.all()),
         ],
     )
     email = serializers.EmailField(
         max_length=settings.EMAIL_MAX_LEN,
-        validators=[UniqueValidator(queryset=User.objects.all())],
     )
 
 
-class UserSerializer(serializers.ModelSerializer, RegistrationSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
