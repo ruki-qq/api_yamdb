@@ -69,7 +69,7 @@ def user_registration(request):
                         status=status.HTTP_400_BAD_REQUEST,
                     )
             break
-    user, created = User.objects.get_or_create(**serializer.data)
+    user, _ = User.objects.get_or_create(**serializer.data)
     conf_code = default_token_generator.make_token(user)
     send_mail(
         'Your confirmation code.',
@@ -89,7 +89,8 @@ def token_obtain(request):
         user, serializer.data.get('confirmation_code')
     ):
         return Response(
-            'Wrong confirmation code.', status=status.HTTP_400_BAD_REQUEST
+            '"confirmation_code": ["Wrong confirmation code."]',
+            status=status.HTTP_400_BAD_REQUEST,
         )
     token = str(AccessToken.for_user(user))
     return Response({'token': token})
